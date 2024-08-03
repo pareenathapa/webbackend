@@ -1,19 +1,19 @@
-//write a function 
-//importing package
-//always export the function 
+// Importing the package
+const mongoose = require("mongoose");
 
+// Creating a function to connect to the database
+const connectDB = async () => {
+  try {
+    await mongoose.connect(process.env.MONGODB_CLOUDURL, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log("Database Connected successfully");
+  } catch (error) {
+    console.error("Database connection failed:", error.message);
+    process.exit(1); // Exit process with failure
+  }
+};
 
-//importing the package
-const mongoose=require('mongoose');
-// creating a function 
-const connectDB=()=>{
-    mongoose.connect(process.env.MONGODB_CLOUDURL).then(()=>{
-        console.log("Database Connected successfully")
-    })
-    
-}
-
-
-//3.Exporting the function 
-module.exports=connectDB;
-
+// Exporting the function
+module.exports = connectDB;
