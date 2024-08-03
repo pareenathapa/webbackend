@@ -1,23 +1,35 @@
-const router = require('express').Router()
-const jeweleryController = require('../controllers/jeweleryController')
-const {adminGuard,authGuard}=require('../middleware/authGuard')
+// jeweleryRoutes.js
+const express = require('express');
+const multer = require('multer');
+const path = require('path');
+const { authGuard, adminGuard }  = require('../middleware/authGuard');
+const {
+    createJewelery,
+    getAllJewelery,
+    getJeweleryById,
+    updateJewelery,
+    deleteJewelery
+} = require('../controllers/jeweleryController');
 
-// Make a create Jewelery API
-router.post('/create',jeweleryController.createJewelery)
+const router = express.Router();
 
-// fetch all
-// http://localhost:5000/api/jewelery/get_all_jewelerys
-router.get('/get_all_jewelerys' ,jeweleryController.getAllJewelerys)
+// Multer configuration for file storage
+const storage = multer.diskStorage({
+    destination: (req, file, cb) => {
+        cb(null, 'uploads/');
+    },
+    filename: (req, file, cb) => {
+        cb(null, Date.now() + path.extname(file.originalname));
+    }
+});
 
-// fetch single jewelery
-// If POST, body(data)
-router.get('/get_single_jewelery/:id', jeweleryController.getJewelery)
+const upload = multer({ storage: storage });
 
-// // delete Jewelery
-router.delete('/delete_jewelery/:id', jeweleryController.deleteJewelery)
+// Define routes
+router.post('/', authGuard, upload.single('jeweleryImage'), createJewelery);
+router.get('/', authGuard, getAllJewelery);
+router.get('/:id', authGuard, getJeweleryById);
+router.put('/:id', authGuard, upload.single('jeweleryImage'), updateJewelery);
+router.delete('/:id', authGuard, deleteJewelery);
 
-// // update jewelery
-router.put('/update_jewelery/:id', jeweleryController.updateJewelery)
-
-// exporting
 module.exports = router;
