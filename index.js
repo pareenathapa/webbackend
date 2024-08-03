@@ -1,69 +1,65 @@
-//1. importing express
-const express=require('express');
-const dotenv= require('dotenv');
-const mongoose= require('mongoose');
-const connectDB = require('./database/database');
+// 1. Importing necessary modules
+const express = require("express");
+const dotenv = require("dotenv");
+const mongoose = require("mongoose");
+const morgan = require("morgan");
+const cors = require("cors");
+const connectDB = require("./database/database");
 
-const cors=require('cors')
-const fileUpload=require('express-fileupload')
+// 2. Configuring environment variables
+dotenv.config();
 
-
-//2. creating an express app
-const app=express();
-
-// josn config
-app.use(express.json())
-
-
-//File upload config
-app.use(fileUpload())
-app.use(express.static('./public'))
-
-//cors config
-const corsOptions ={
-    origin:true,
-    credentials: true,
-    optionSuccessStatus:200
-
-}
-app.use(cors(corsOptions))
-
-//configuration dotenv
-dotenv.config()
-
-
-//connecting to the databades
+// 3. Connecting to the database
 connectDB();
 
-app.use('/public', express.static('public'));
+// 4. Creating an express app
+const app = express();
 
+// JSON config
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-//3. deffining the port
-const PORT=process.env.PORT;
+// File upload config
+app.use("/public", express.static("public"));
 
+// CORS config
+const corsOptions = {
+  origin: true,
+  credentials: true,
+  optionsSuccessStatus: 200,
+};
+app.use(cors(corsOptions));
+app.use(morgan("dev"));
+app.use("/public", express.static("public")); // Serve the uploaded files
 
-//5. creating a test route or endpoint= request pathaunye kam garxa end point lye 
-app.get('/test',(req,res)=>{
-    res.send("Test Api is Working.....!")
-})
+// 5. Defining the port
+const PORT = process.env.PORT || 5500;
 
-app.get('/print',(req,res)=>{
-    res.send("Print Api is Working.....!")
-})
+// 6. Creating test routes or endpoints
+app.get("/test", (req, res) => {
+  res.send("Test API is Working.....!");
+});
 
-// Configuring user routes
-app.use('/api/user',require('./routes/userRoutes'))
-app.use('/api/jewelery',require('./routes/jeweleryRoutes'))
+app.get("/print", (req, res) => {
+  res.send("Print API is Working.....!");
+});
 
-//routeresult
-//http://localhost:5500/api/user/create
+// 7. Configuring routes
+app.use("/api/user", require("./routes/userRoutes"));
+app.use("/api/jewelry", require("./routes/jewelryRoutes"));
+app.use("/api/order", require("./routes/orderRouter"));
 
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send("Something broke!");
+});
 
-//4. starting the server
-app.listen(PORT, ()=>{
-    console.log(`Server-app is running on port ${PORT}`)
-})
+// 8. Starting the server
+app.listen(PORT, () => {
+  console.log(`Server-app is running on port ${PORT}`);
+});
 
-
-//API URL
-// http://localhost:5500/test 
+// API URLs
+// http://localhost:5500/test
+// http://localhost:5500/api/user/create
