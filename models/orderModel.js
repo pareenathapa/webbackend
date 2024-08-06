@@ -3,12 +3,12 @@ const mongoose = require("mongoose");
 const orderSchema = new mongoose.Schema({
   jewelry: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "Jewelry",
+    ref: "jewelry",
     required: true,
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User", // Assuming you have a User model
+    ref: "users", // Assuming you have a User model
     required: true,
   },
   quantity: {
@@ -31,6 +31,6 @@ const orderSchema = new mongoose.Schema({
   },
 });
 
-const Order = mongoose.model("Order", orderSchema);
+const Order = mongoose.model("order", orderSchema);
 
 module.exports = Order;

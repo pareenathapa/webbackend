@@ -92,7 +92,7 @@ const loginUser = async (req, res) => {
 
     //3.generate JWT token
     //3.1 secret decryption key(.env)
-    const token = await jwt.sign({ id: user._id }, "SECRET");
+    const token = await jwt.sign({ id: user }, "SECRET");
     ///4. send the token, userdata,message to the user
     res.json({
       success: true,

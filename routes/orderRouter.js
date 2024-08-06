@@ -12,8 +12,10 @@ const { authGuard, adminGuard } = require("../middleware/authGuard");
 
 // Define the routes
 router.post("/", authGuard, createOrder);
-router.get("/:id", authGuard, getOrderById);
+router.get("/by-id/:id", authGuard, getOrderById);
 router.get("/", adminGuard, authGuard, getAllOrders);
 router.get("/user", authGuard, getUserOrders);
-router.delete("/:id", adminGuard, authGuard, deleteOrder);
-router.delete("/user-order/:id", authGuard, deleteUserOrder);
+router.delete("/by-id/:id", adminGuard, authGuard, deleteOrder);
+router.delete("/user/:id", authGuard, deleteUserOrder);
+
+module.exports = router;

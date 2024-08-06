@@ -5,7 +5,7 @@ const Jewelry = require("../models/jewelryModel");
 const createOrder = async (req, res) => {
   try {
     const { jewelryId, quantity } = req.body;
-    const userId = req.user._id; // Assuming user is authenticated and user ID is available
+    const userId = req.user.id; // Assuming user is authenticated and user ID is available
 
     const jewelryItem = await Jewelry.findById(jewelryId);
     if (!jewelryItem) {
@@ -51,6 +51,7 @@ const getAllOrders = async (req, res) => {
     const orders = await Order.find().populate("jewelry").populate("user");
     res.status(200).json(orders);
   } catch (error) {
+    console.log(error);
     res.status(500).json({ message: "Error fetching orders", error });
   }
 };
@@ -58,7 +59,7 @@ const getAllOrders = async (req, res) => {
 // Get all orders for a specific user
 const getUserOrders = async (req, res) => {
   try {
-    const userId = req.user._id; // Assuming user is authenticated and user ID is available
+    const userId = req.user.id; // Assuming user is authenticated and user ID is available
     const orders = await Order.find({ user: userId })
       .populate("jewelry")
       .populate("user");
@@ -84,9 +85,9 @@ const deleteOrder = async (req, res) => {
 // Delete an order for a specific user
 const deleteUserOrder = async (req, res) => {
   try {
-    const userId = req.user._id; // Assuming user is authenticated and user ID is available
+    const userId = req.user.id;
     const order = await Order.findOneAndDelete({
-      _id: req.params.id,
+      id: req.params.id,
       user: userId,
     });
     if (!order) {
