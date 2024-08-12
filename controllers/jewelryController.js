@@ -13,13 +13,14 @@ const storage = multer.diskStorage({
 });
 
 const upload = multer({ storage: storage });
-
 // Create new jewelry item
 const createJewelry = async (req, res) => {
   try {
     const { jewelryName, jewelryPrice, jewelryDescription, jewelryCategory } =
       req.body;
-    const jewelryImage = req.file.path;
+
+    // Check if an image file was uploaded, if not, use a default image
+    const jewelryImage = req.file ? req.file.path : "path/to/default/image.jpg";
 
     const newJewelry = new Jewelry({
       jewelryName,
@@ -39,11 +40,18 @@ const createJewelry = async (req, res) => {
   }
 };
 
+module.exports = {
+  createJewelry,
+};
+
 // Read all jewelry items
 const getAllJewelry = async (req, res) => {
   try {
     const jewelryItems = await Jewelry.find();
-    res.status(200).json(jewelryItems);
+    res.status(200).json({
+      message: "Success",
+      data: jewelryItems,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching jewelry items", error });
   }
@@ -56,7 +64,10 @@ const getJewelryById = async (req, res) => {
     if (!jewelryItem) {
       return res.status(404).json({ message: "Jewelry item not found" });
     }
-    res.status(200).json(jewelryItem);
+    res.status(200).json({
+      message: "Success",
+      data: jewelryItem,
+    });
   } catch (error) {
     res.status(500).json({ message: "Error fetching jewelry item", error });
   }
