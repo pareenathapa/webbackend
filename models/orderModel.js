@@ -8,7 +8,7 @@ const orderSchema = new mongoose.Schema({
   },
   user: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "users", // Assuming you have a User model
+    ref: "user", // Assuming you have a User model
     required: true,
   },
   quantity: {

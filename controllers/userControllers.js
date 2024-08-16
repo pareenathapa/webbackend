@@ -1,13 +1,49 @@
-// make a function (Logic)
 const userModel = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
+const multer = require("multer");
+const path = require("path");
 
-// 1. Creating user function
+// Configure Multer for image upload
+// Configure multer for file upload
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, "public/uploads/user/"); // Make sure this directory exists and is accessible
+  },
+  filename: (req, file, cb) => {
+    cb(null, Date.now() + path.extname(file.originalname));
+  },
+});
+const upload = multer({ storage: storage });
+
+// 1. Get user function
+const getUser = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.params.id);
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+    const token = await jwt.sign({ id: user._id }, "SECRET");
+    res.json({
+      success: true,
+      token: token,
+      data: user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: "Internal Server Error!",
+    });
+  }
+};
+
+// 2. Create user function
 const createUser = async (req, res) => {
   //1. Get data from the user (Fname,lname, email,pp)
-
-  //#.Destructuring
   const { firstName, lastName, email, password, confirmPassword } = req.body;
 
   //2. validation
@@ -16,10 +52,10 @@ const createUser = async (req, res) => {
       success: false,
       message: "Please enter all fields!",
     });
-  } // != first name xaina vanye hunxa meaning
-  //try- catch (error Handling)
+  }
+
   try {
-    //check if the user is already exist
+    //check if the user already exists
     const existingUser = await userModel.findOne({ email: email });
     if (existingUser) {
       return res.json({
@@ -28,89 +64,168 @@ const createUser = async (req, res) => {
       });
     }
 
-    // Hash /encrypt the password
+    // Hash the password
     const randomSalt = await bcrypt.genSalt(10);
     const hashPassword = await bcrypt.hash(password, randomSalt);
 
-    //Save the user in database
+    // Create the new user with the image if uploaded
     const newUser = new userModel({
-      //Fields:Values received from user
       firstName: firstName,
       lastName: lastName,
       email: email,
       password: hashPassword,
       confirmPassword: hashPassword,
+      image: req.file ? req.file.path : null,
     });
 
-    //Actually save the user in database
-    await newUser.save(); //certain time launa sakxa VANYE Await launye ho
+    // Save the new user to the database
+    await newUser.save();
 
     // Send the success response
     res.json({
       success: true,
       message: "User created successfully",
-    });
-  } catch (error) {
-    console.log(error); //resposce pathai ra ko ho catch ma
-    res.json({
-      success: false,
-      message: "internal Server Error!",
-    });
-  }
-};
-// 2.login user function
-const loginUser = async (req, res) => {
-  // res.send('Login user api in working!')
-  // check incomming data
-  console.log(req.body);
-  // destructuring
-  const { email, password } = req.body;
-  ///validation
-  if (!email || !password) {
-    return res.json({
-      success: false,
-      message: "please enter all fields!",
-    });
-  }
-  try {
-    //1. find user, if not :stop the process
-    const user = await userModel.findOne({ email: email });
-    if (!user) {
-      return res.json({
-        success: false,
-        message: "user not found!",
-      });
-    }
-    //2.compare the password, if not :stop the process
-    const isValidPassword = await bcrypt.compare(password, user.password);
-    if (!isValidPassword) {
-      return res.json({
-        success: false,
-        message: "Incorrect password!",
-      });
-    }
-
-    //3.generate JWT token
-    //3.1 secret decryption key(.env)
-    const token = await jwt.sign({ id: user }, "SECRET");
-    ///4. send the token, userdata,message to the user
-    res.json({
-      success: true,
-      message: "Login Successful",
-      token: token,
-      userData: user,
+      data: newUser,
     });
   } catch (error) {
     console.log(error);
     res.json({
       success: false,
-      message: "internal server error!",
+      message: "Internal Server Error!",
     });
   }
 };
 
-// exporting
+// 3. Update user function
+const updateUser = async (req, res) => {
+  const { firstName, lastName, email, password, confirmPassword } = req.body;
+
+  //2. validation
+  if (!firstName || !lastName || !email) {
+    return res.json({
+      success: false,
+      message: "Please enter all required fields!",
+    });
+  }
+
+  try {
+    const user = await userModel.findById(req.params.id);
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    if (password && confirmPassword) {
+      if (password !== confirmPassword) {
+        return res.json({
+          success: false,
+          message: "Passwords do not match!",
+        });
+      }
+      const randomSalt = await bcrypt.genSalt(10);
+      user.password = await bcrypt.hash(password, randomSalt);
+      user.confirmPassword = user.password;
+    }
+
+    user.firstName = firstName;
+    user.lastName = lastName;
+    user.email = email;
+    if (req.file) {
+      user.image = req.file.path; // Update the image if a new one is uploaded
+    }
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "User updated successfully",
+      data: user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: "Internal Server Error!",
+    });
+  }
+};
+
+// 4. Delete user function
+const deleteUser = async (req, res) => {
+  try {
+    const user = await userModel.findById(req.params.id);
+    if (!user) {
+      return res.json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    await user.deleteOne();
+
+    res.json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.json({
+      success: false,
+      message: "Internal Server Error!",
+    });
+  }
+};
+
+// 5. Login user function
+const loginUser = async (req, res) => {
+  const { email, password } = req.body;
+  if (!email || !password) {
+    return res.json({
+      success: false,
+      message: "Please enter all fields!",
+    });
+  }
+
+  try {
+    const user = await userModel.findOne({ email: email });
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found!",
+      });
+    }
+
+    const isValidPassword = await bcrypt.compare(password, user.password);
+    if (!isValidPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Incorrect password!",
+      });
+    }
+
+    const token = await jwt.sign({ id: user._id }, "SECRET");
+    res.json({
+      success: true,
+      message: "Login Successful",
+      token: token,
+      data: user,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Internal Server Error!",
+    });
+  }
+};
+
+// Exporting the functions
 module.exports = {
-  createUser,
+  getUser,
+  createUser: [upload.single("image"), createUser],
+  updateUser: [upload.single("image"), updateUser],
+  deleteUser,
   loginUser,
 };

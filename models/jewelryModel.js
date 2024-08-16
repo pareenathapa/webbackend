@@ -1,7 +1,6 @@
 const mongoose = require("mongoose");
 
 const jewelrySchema = new mongoose.Schema({
-  // fields : NAME, PRICE, DESCRIPTION, IMAGE, CATEGORY
   jewelryName: {
     type: String,
     required: true,

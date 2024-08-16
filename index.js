@@ -48,6 +48,7 @@ app.get("/print", (req, res) => {
 app.use("/api/user", require("./routes/userRoutes"));
 app.use("/api/jewelry", require("./routes/jewelryRoutes"));
 app.use("/api/order", require("./routes/orderRouter"));
+app.use("/api/wishlist", require("./routes/wishlistRouter"));
 
 // Error handling middleware
 app.use((err, req, res, next) => {
